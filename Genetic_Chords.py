@@ -8,7 +8,6 @@
 # 2b 46 50 48 51 53 51 48 45 46
 
 
-
 import random
 import math
 import numpy
@@ -19,15 +18,30 @@ from deap import tools
 from deap import algorithms
 
 """
-si la armadura tiene sostenido se multiplica 7 por el número de sostenidos mod(12)
-si la armadura tiene bemoles se multiplica 5 por el número de bemoles mod(12)
+si la armadura tiene # se multiplica 7 por el número de sostenidos mod(12)
+si la armadura tiene b se multiplica 5 por el número de bemoles mod(12)
 """
 
 # Global Variables
-OPTIONS_M = ((0,-3,5), (0,-3,5), (0,-4,5), (0,-3,6), (0,-3,5), (0,-4,5), (0,-4,5))
-OPTIONS_m = ((0,-4,5), (0,-4,5), (0,-3,5), (0,-3,5), (0,-4,5), (0,-3,6), (0,5))
-MOD_M = ('M','m','m','M','M','m','d')
-MOD_m = ('m','d','M','m','M','M','M')
+OPTIONS_M = ((0, -3, 5),
+             (0, -3, 5),
+             (0, -4, 5),
+             (0, -3, 6),
+             (0, -3, 5),
+             (0, -4, 5),
+             (0, -4, 5)
+            )
+OPTIONS_m = ((0, -4, 5),
+             (0, -4, 5),
+             (0, -3, 5),
+             (0, -3, 5),
+             (0, -4, 5),
+             (0, -3, 6),
+             (0, 5)
+            )
+MOD_M = ('M', 'm', 'm', 'M', 'M', 'm', 'd')
+MOD_m = ('m', 'd', 'M', 'm', 'M', 'M', 'M')
+
 
 def neighborhood(iterable):
     """Generator gives the prev actual and next"""
@@ -40,6 +54,7 @@ def neighborhood(iterable):
         item = nex
     yield (prev, item, None)
 
+
 def setTon(line):
     """Determine the tonality of the exercice"""
     ton = line[:2]
@@ -50,50 +65,52 @@ def setTon(line):
         ton = (int(ton[0]) * 5) % 12
     for note in notes:
         if (ton + 6) % 12 == note % 12:
-            ton = str((ton-3) % 12) +'m'
+            ton = str((ton - 3) % 12) + 'm'
             break
     else:
-        if ton-3 == notes[-1]%12:
-            ton = str((ton-3)%12)+'m'
+        if ton - 3 == notes[-1] % 12:
+            ton = str((ton - 3) % 12) + 'm'
         else:
-            ton = str(ton)+'M'
+            ton = str(ton) + 'M'
     return ton, notes
+
 
 def creatChord(nameC, noteF):
     """Create one chord given the name of the chord and the fundamental note"""
     num_funda = int(nameC[:-1])
     if nameC[-1] == 'M':
-        val_notes = [num_funda, (num_funda+4)%12, (num_funda+7)%12]
+        val_notes = [num_funda, (num_funda + 4) % 12, (num_funda + 7) % 12]
     elif nameC[-1] == 'm':
-        val_notes = [num_funda, (num_funda+3)%12, (num_funda+7)%12]
+        val_notes = [num_funda, (num_funda + 3) % 12, (num_funda + 7) % 12]
     elif nameC[-1] == 'd':
-        val_notes = [num_funda, (num_funda+3)%12, (num_funda+6)%12]
+        val_notes = [num_funda, (num_funda + 3) % 12, (num_funda + 6) % 12]
 
     tenorR = list(range(48, 69))
     contR = list(range(52, 77))
     sopR = list(range(60, 86))
 
     # Depending in the bass note this are the options for the others voices
-    if noteF%12 == val_notes[0]:
-        opc = [[1,1,1], [2,1,0], [0,1,2]]
-    elif noteF%12 == val_notes[1]:
-        opc = [[1,0,2], [3,0,0], [2,0,1]]
-    elif noteF%12 == val_notes[2]:
-        opc = [[1,1,1], [2,1,0]]
+    if noteF % 12 == val_notes[0]:
+        opc = [[1, 1, 1], [2, 1, 0], [0, 1, 2]]
+    elif noteF % 12 == val_notes[1]:
+        opc = [[1, 0, 2], [3, 0, 0], [2, 0, 1]]
+    elif noteF % 12 == val_notes[2]:
+        opc = [[1, 1, 1], [2, 1, 0]]
 
     opc = random.choice(opc)
     chordN = list()
     for num, val in zip(opc, val_notes):
-        chordN += [val]*num
+        chordN += [val] * num
 
     random.shuffle(chordN)
 
-    chord = [noteF,]
+    chord = [noteF, ]
     for nte, voce in zip(chordN, [tenorR, contR, sopR]):
-        posible_n = [x for x in voce if x%12 == nte]
+        posible_n = [x for x in voce if x % 12 == nte]
         chord.append(random.choice(posible_n))
 
     return chord
+
 
 def selChord(ton, notesBass):
     """Select the chords from all the posibilities"""
@@ -102,15 +119,17 @@ def selChord(ton, notesBass):
     prog = list()
 
     for note in notesBass:
-        name = note%12
-        grad = name-int(ton[:-1])
-        grad = math.ceil(((grad+12)%12) / 2)
-        num = (listaOp[grad][random.randint(0,len(listaOp[grad])-1)] + name +12) %12
-        grad = num-int(ton[:-1])
-        grad = math.ceil(((grad+12)%12) / 2)
+        name = note % 12
+        grad = name - int(ton[:-1])
+        grad = math.ceil(((grad + 12) % 12) / 2)
+        num = (listaOp[grad][random.randint(0, len(listaOp[grad]) - 1)]
+               + name + 12) % 12
+        grad = num - int(ton[:-1])
+        grad = math.ceil(((grad + 12) % 12) / 2)
         name = '{}{}'.format(num, listaMod[grad])
         prog.append([creatChord(name, note), grad])
     return prog
+
 
 def newChordProg(ton, notes):
     """Create a new individual given the tonality and the base notes"""
@@ -118,25 +137,27 @@ def newChordProg(ton, notes):
     for c in chords:
         yield c
 
+
 def check_interval(chord):
     """Return the number of mistakes in the distance between the notes"""
     res = 0
-    if chord[2] - chord[1] > 12 or chord[2]-chord[1] < 0:
+    if chord[2] - chord[1] > 12 or chord[2] - chord[1] < 0:
         res += 15
-    if chord[3] - chord[2] > 12 or chord[3]-chord[2] < 0:
+    if chord[3] - chord[2] > 12 or chord[3] - chord[2] < 0:
         res += 15
 
     if chord[1] == chord[2] or chord[2] == chord[3]:
         res += 1.4
     return res
 
+
 def check_2_chords(ch1, ch2):
     """Return the number of mistakes in the intervals between 2 chords"""
     res = 0
 
     # Check for 5° and 8°
-    ite1 = map(lambda x,y: y-x, ch1[:-1], ch1[1:])
-    ite2 = map(lambda x,y: y-x, ch2[:-1], ch2[1:])
+    ite1 = map(lambda x, y: y - x, ch1[:-1], ch1[1:])
+    ite2 = map(lambda x, y: y - x, ch2[:-1], ch2[1:])
     for inter1, inter2 in zip(ite1, ite2):
         if inter1 == 7 and inter2 == 7:
             res += 15
@@ -147,17 +168,18 @@ def check_2_chords(ch1, ch2):
 
     # Check for big intervals, just to make it more "human"
     for note1, note2 in zip(ch1[1:], ch2[1:]):
-        if abs(note1-note2) >= 7: # 7 equals 5° interval
+        if abs(note1 - note2) >= 7:  # 7 equals 5° interval
             res += .7
 
     return res
+
 
 def evalNumErr(ton, individual):
     """Evaluation function"""
     res = 0
     for prev, item, nex in neighborhood(individual):
         res += check_interval(item[0])
-        if prev == None:
+        if prev is None:
             if item[1] != 0:
                 res += 6
             continue
@@ -165,7 +187,7 @@ def evalNumErr(ton, individual):
             if prev[1] in [4, 6] and item[1] in [3, 1]:
                 res += 20
             res += check_2_chords(prev[0], item[0])
-        if nex == None:
+        if nex is None:
             if item[1] in [1, 2, 3, 4, 5, 6]:
                 res += 6
     return (res,)
@@ -182,18 +204,20 @@ def mutChangeNotes(ton, individual, indpb):
 
             note = individual[x][0][0]
 
-            name = note%12
-            grad = name-int(ton[:-1])
-            grad = math.ceil(((grad+12)%12) / 2)
-            num = (listaOp[grad][random.randint(0,len(listaOp[grad])-1)] + name +12) %12
-            grad = num-int(ton[:-1])
-            grad = math.ceil(((grad+12)%12) / 2)
+            name = note % 12
+            grad = name - int(ton[:-1])
+            grad = math.ceil(((grad + 12) % 12) / 2)
+            num = (listaOp[grad][random.randint(0, len(listaOp[grad]) - 1)]
+                   + name + 12) % 12
+            grad = num - int(ton[:-1])
+            grad = math.ceil(((grad + 12) % 12) / 2)
             name = '{}{}'.format(num, listaMod[grad])
 
             new_ind[x] = [creatChord(name, note), grad]
 
     del new_ind.fitness.values
     return new_ind,
+
 
 def transform_lilypond(ton, indiv):
     """Take one list of chords and print the it in lilypond notation"""
@@ -209,8 +233,8 @@ def transform_lilypond(ton, indiv):
                     7: 'g',
                     8: 'gis',
                     9: 'a',
-                    10:'ais',
-                    11:'b'
+                    10: 'ais',
+                    11: 'b'
                     }
     else:
         note_map = {0: 'c',
@@ -223,23 +247,24 @@ def transform_lilypond(ton, indiv):
                     7: 'g',
                     8: 'aes',
                     9: 'a',
-                    10:'bes',
-                    11:'b'
+                    10: 'bes',
+                    11: 'b'
                     }
     voces = [[], [], [], []]
 
     for chord in indiv:
         for note, voce in zip(chord, voces):
 
-            octave = (note // 12)-4
+            octave = (note // 12) - 4
             name_lily = note_map[note % 12]
             if octave < 0:
                 name_lily += ',' * (octave * -1)
             elif octave > 0:
                 name_lily += "'" * octave
             voce.append(name_lily)
+    form_txt = '{}|\n{}|\n{}|\n{}|\n'
+    print(form_txt.format(*(' '.join(voce) for voce in reversed(voces))))
 
-    print('{}|\n{}|\n{}|\n{}|\n'.format(*(' '.join(voce) for voce in reversed(voces))))
 
 def main(ton):
     pop = toolbox.population(n=400)
@@ -250,15 +275,30 @@ def main(ton):
     stats.register('min', numpy.min)
     stats.register('max', numpy.max)
 
-    pop, log = algorithms.eaSimple(pop, toolbox, cxpb=0.5, mutpb=0.3, ngen=70, stats=stats, halloffame=hof, verbose=True)
+    pop, log = algorithms.eaSimple(pop,
+                                   toolbox,
+                                   cxpb=0.5,
+                                   mutpb=0.3,
+                                   ngen=70,
+                                   stats=stats,
+                                   halloffame=hof,
+                                   verbose=True)
     while min(log.select('min')) > 15:
         pop = toolbox.population(n=400)
-        pop, log = algorithms.eaSimple(pop, toolbox, cxpb=0.5, mutpb=0.3, ngen=70, stats=stats, halloffame=hof, verbose=True)
+        pop, log = algorithms.eaSimple(pop,
+                                       toolbox,
+                                       cxpb=0.5,
+                                       mutpb=0.3,
+                                       ngen=70,
+                                       stats=stats,
+                                       halloffame=hof,
+                                       verbose=True)
 
     for best in hof:
         print([x[0] for x in best])
 
         transform_lilypond(ton, [x[0] for x in best])
+
 
 if __name__ == '__main__':
     line = input('n[#b] notas ')
